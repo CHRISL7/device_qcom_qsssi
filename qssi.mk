@@ -12,6 +12,7 @@ PRODUCT_OTA_ENFORCE_VINTF_KERNEL_REQUIREMENTS := false
 PRODUCT_PRODUCT_VNDK_VERSION := current
 
 RELAX_USES_LIBRARY_CHECK := true
+NEED_AIDL_NDK_PLATFORM_BACKEND := true
 
 #Enable product partition Java I/F. It is automatically set to true if
 #the shipping API level for the target is greater than 29
@@ -41,7 +42,7 @@ BOARD_AVB_ENABLE := true
 
 # Retain the earlier default behavior i.e. ota config (dynamic partition was disabled if not set explicitly), so set
 # SHIPPING_API_LEVEL to 28 if it was not set earlier (this is generally set earlier via build.sh per-target)
-SHIPPING_API_LEVEL := 32
+SHIPPING_API_LEVEL := 33
 
 $(call inherit-product-if-exists, vendor/qcom/defs/product-defs/system/cne_url*.mk)
 
@@ -80,8 +81,6 @@ endif
 #### Dynamic Partition Handling
 
 PRODUCT_SOONG_NAMESPACES += \
-    frameworks/base/boot \
-    cts/tests/signature/api-check \
     hardware/google/av \
     hardware/google/interfaces
 
@@ -97,6 +96,7 @@ TARGET_USES_NEW_ION := true
 ENABLE_AB ?= true
 
 TARGET_DEFINES_DALVIK_HEAP := true
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, device/qcom/qssi/common64.mk)
 
 #Inherit all except heap growth limit from phone-xhdpi-2048-dalvik-heap.mk
@@ -113,7 +113,7 @@ PRODUCT_DEVICE := $(VENDOR_QTI_DEVICE)
 PRODUCT_BRAND := qti
 PRODUCT_MODEL := qssi system image for arm64
 
-PRODUCT_EXTRA_VNDK_VERSIONS := 30 31
+PRODUCT_EXTRA_VNDK_VERSIONS := 30 31 32
 
 #Initial bringup flags
 TARGET_USES_AOSP := false
@@ -275,9 +275,9 @@ else
 AUDIO_FEATURE_ENABLED_DLKM := false
 endif
 
-ifeq ($(ENABLE_VIRTUAL_AB), true)
-    $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota.mk)
-endif
+# Enable virtual A/B compression
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/android_t_baseline.mk)
+PRODUCT_VIRTUAL_AB_COMPRESSION_METHOD := gz
 
 # Include mainline components and QSSI whitelist
 ifeq (true,$(call math_gt_or_eq,$(SHIPPING_API_LEVEL),29))
